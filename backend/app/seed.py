@@ -25,7 +25,7 @@ def seed():
     with Session() as db:
         if db.scalar(select(m.Farm).limit(1)):
             return
-        team = m.Team(id="team-demo", name="Field Systems Research Â· simulated lab")
+        team = m.Team(id="team-demo", name="Field Systems Research · simulated lab")
         db.add(team)
         db.flush()
         db.add(
@@ -54,12 +54,12 @@ def seed():
         )
         types = [
             ("soil_moisture", "% VWC", 28, 5),
-            ("soil_temperature", "Â°C", 21, 5),
-            ("air_temperature", "Â°C", 24, 8),
+            ("soil_temperature", "°C", 21, 5),
+            ("air_temperature", "°C", 24, 8),
             ("humidity", "%", 65, 15),
             ("rainfall", "mm", 1, 2),
-            ("canopy_temperature", "Â°C", 26, 7),
-            ("par", "Âµmol/mÂ²/s", 500, 350),
+            ("canopy_temperature", "°C", 26, 7),
+            ("par", "µmol/m²/s", 500, 350),
             ("leaf_wetness", "%", 35, 20),
         ]
         for measure, unit, _, _ in types:
@@ -88,7 +88,7 @@ def seed():
                 x, y = -83.08 + fi * 0.025, 40.04 + field_index * 0.015
                 field = m.Field(
                     id=f"field-{k}",
-                    name=f"{farm.name} Â· {'East' if field_index else 'West'}",
+                    name=f"{farm.name} · {'East' if field_index else 'West'}",
                     farm_id=farm.id,
                     boundary=polygon(x, y, 0.009, 0.009),
                 )
@@ -131,7 +131,7 @@ def seed():
                         db.add(
                             m.Sensor(
                                 id=sid,
-                                name=f"{measure.replace('_', ' ').title()} Â· {k + 1}.{pi + 1}",
+                                name=f"{measure.replace('_', ' ').title()} · {k + 1}.{pi + 1}",
                                 plot_id=plot.id,
                                 type_id=measure,
                                 location=f"SRID=4326;POINT({px + 0.0004 + si * 0.00035} {py + 0.0017})",

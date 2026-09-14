@@ -7,6 +7,7 @@ test('researcher can explore actual data, maps, filters and exports', async ({ p
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(page.locator('.stat')).toHaveCount(4);
   await expect(page.locator('.recharts-surface').first()).toBeVisible();
+  await expect(page.locator('.recharts-area-area').first()).toBeVisible();
   await expect(page.locator('.leaflet-interactive').first()).toBeVisible();
   await page.screenshot({ path: '../artifacts/screenshots/overview.png', fullPage: true });
   await page.getByRole('button', { name: 'Data explorer', exact: true }).click();

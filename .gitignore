@@ -6,6 +6,9 @@ __pycache__/
 node_modules/
 dist/
 coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
 *.tfstate*
 .terraform/
 *.tfvars

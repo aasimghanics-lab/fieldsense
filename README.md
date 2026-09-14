@@ -28,7 +28,7 @@ The seed covers 3 farms, 6 fields, 24 plots, corn/soybean/wheat, 6 experiments a
 
 ## Technology and architecture
 
-Python 3.12 Â· FastAPI Â· SQLAlchemy Â· Pydantic Â· Alembic Â· PostgreSQL 16/PostGIS Â· MongoDB 7 Â· scikit-learn Â· React 19 Â· TypeScript Â· Vite Â· Leaflet Â· Recharts Â· base R Â· Docker Compose Â· GitHub Actions Â· AWS/Terraform.
+Python 3.12 · FastAPI · SQLAlchemy · Pydantic · Alembic · PostgreSQL 16/PostGIS · MongoDB 7 · scikit-learn · React 19 · TypeScript · Vite · Leaflet · Recharts · base R · Docker Compose · GitHub Actions · AWS/Terraform.
 
 ```mermaid
 flowchart LR

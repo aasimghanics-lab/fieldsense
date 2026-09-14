@@ -64,6 +64,18 @@ def main():
             "platform": platform.platform(),
             "python": platform.python_version(),
             "cpu_count": os.cpu_count(),
+            "cpu_model": next(
+                (
+                    line.split(":", 1)[1].strip()
+                    for line in open("/proc/cpuinfo")
+                    if line.startswith("model name")
+                ),
+                "unknown",
+            ),
+            "memory": next(
+                (line.strip() for line in open("/proc/meminfo") if line.startswith("MemTotal")),
+                "unknown",
+            ),
             "readings": documents.readings.estimated_document_count(),
             "results": results,
         }

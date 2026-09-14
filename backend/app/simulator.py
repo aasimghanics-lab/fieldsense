@@ -16,6 +16,7 @@ def main():
         sensors = (
             client.get("/api/sensors", params={"size": 500}).raise_for_status().json()["items"]
         )
+        batches = 0
         while True:
             batch = [
                 {
@@ -38,6 +39,9 @@ def main():
                     if attempt == 4:
                         raise
                     time.sleep(2**attempt)
+            batches += 1
+            if batches >= int(os.getenv("SIMULATOR_BATCHES", "0")) > 0:
+                return
             time.sleep(15)
 
 

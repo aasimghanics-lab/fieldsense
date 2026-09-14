@@ -199,3 +199,27 @@ def test_sensor_detail_and_dashboard(client):
     assert dashboard["active_sensors"] + dashboard["offline_sensors"] == 192
     assert dashboard["readings"] > 200000
     assert client.get("/api/sensors/does-not-exist").status_code == 404
+
+
+def test_real_simulator(client):
+    import subprocess
+
+    env = dict(os.environ, SIMULATOR_BATCHES="1")
+    try:
+        result = subprocess.run(
+            ["python", "-m", "app.simulator"], env=env, capture_output=True, text=True, timeout=60
+        )
+        assert result.returncode == 0, result.stderr
+        assert documents.readings.count_documents({"raw.source": "continuous simulator"}) == 24
+    finally:
+        documents.readings.delete_many({"raw.source": "continuous simulator"})
+
+
+def test_quality_range_and_filter_timezone(client, headers):
+    row = payload(150)
+    try:
+        assert client.post("/api/readings", json=[row], headers=headers).status_code == 201
+        assert documents.readings.find_one({"_id": row["id"]})["quality"] == ["out_of_range"]
+        assert client.get("/api/readings?start=2026-01-01T00:00:00").status_code == 422
+    finally:
+        documents.readings.delete_one({"_id": row["id"]})

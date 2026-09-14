@@ -48,6 +48,13 @@ class Filters(BaseModel):
     start: datetime | None = None
     end: datetime | None = None
 
+    @field_validator("start", "end")
+    @classmethod
+    def filter_timezone(cls, value):
+        if value is not None and value.tzinfo is None:
+            raise ValueError("Time filters must include a timezone")
+        return value
+
 
 FilterQuery = Annotated[Filters, Depends()]
 
@@ -120,6 +127,19 @@ def ingest(db, readings):
         row["_id"] = row.pop("id")
         row["measurement"] = metadata[reading.sensor_id]["measurement"]
         row["quality"] = ["missing"] if reading.value is None else []
+        limits = {
+            "soil_moisture": (0, 100),
+            "humidity": (0, 100),
+            "leaf_wetness": (0, 100),
+            "soil_temperature": (-50, 80),
+            "air_temperature": (-60, 70),
+            "canopy_temperature": (-60, 90),
+            "rainfall": (0, 500),
+            "par": (0, 3000),
+        }
+        low, high = limits[row["measurement"]]
+        if reading.value is not None and not low <= reading.value <= high:
+            row["quality"].append("out_of_range")
         row["received_at"] = datetime.now(timezone.utc)
         row["anomaly"] = False
         operations.append(UpdateOne({"_id": row["_id"]}, {"$setOnInsert": row}, upsert=True))

@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: fieldsense
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-research-only}
+      POSTGRES_DB: fieldsense
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fieldsense"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+  mongo:
+    image: mongo:7.0
+    volumes: ["mongo-data:/data/db"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://fieldsense:local-research-only@postgres:5432/fieldsense}
+      MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017}
+      WRITE_TOKEN: ${WRITE_TOKEN:-local-write-token-change-before-hosting}
+      SEED_DATA: ${SEED_DATA:-true}
+    depends_on:
+      postgres: {condition: service_healthy}
+      mongo: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      retries: 20
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports: ["127.0.0.1:8080:80"]
+    depends_on:
+      backend: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      retries: 10
+    restart: unless-stopped
+  analysis:
+    image: r-base:4.5.0
+    profiles: ["analysis"]
+    volumes: ["./analysis:/analysis", "./artifacts:/artifacts"]
+    command: ["Rscript", "/analysis/summarize.R", "/artifacts/readings.csv", "/artifacts/r"]
+volumes:
+  postgres-data:
+  mongo-data:

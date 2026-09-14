@@ -54,6 +54,7 @@ jobs:
           path: |
             artifacts/screenshots/
             frontend/package-lock.json
+            frontend/test-results/
       - name: Container logs
         if: always()
         run: docker compose logs --tail 100

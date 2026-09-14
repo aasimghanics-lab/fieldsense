@@ -26,7 +26,7 @@ test('researcher can explore actual data, maps, filters and exports', async ({ p
   await page.getByRole('button', { name: 'Time series', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Measurement history' })).toBeVisible();
   await page.screenshot({ path: '../artifacts/screenshots/time-series.png', fullPage: true });
-  const downloadEvent = page.waitForEvent('download');
+  const downloadEvent = page.waitForEvent('download',{timeout:10000}).catch(async()=>{throw new Error('Export failed: '+await page.locator('.error').allTextContents());});
   await page.getByRole('button', {name:'Save PNG',exact:true}).click();
   const download = await downloadEvent;
   expect(download.suggestedFilename()).toBe('fieldsense-chart.png');
@@ -55,7 +55,10 @@ test('create an experiment and record a research annotation', async ({page}) => 
   await form.getByLabel('Start',{exact:true}).fill('2026-06-01');
   await form.getByLabel('End',{exact:true}).fill('2026-09-30');
   await form.getByLabel('Treatments, separated by commas').fill('Control, Irrigation');
+  const responseEvent=page.waitForResponse(r=>r.url().endsWith('/api/experiments')&&r.request().method()==='POST');
   await form.getByRole('button',{name:'Create experiment',exact:true}).click();
+  const response=await responseEvent;
+  expect(response.status(),JSON.stringify(await response.json())).toBe(201);
   await expect(page.locator('.detail h2')).toHaveText('Browser-verified water trial');
   await page.locator('.detail').getByLabel('Research note').fill('Plot layout reviewed in browser verification.');
   await page.getByRole('button',{name:'Add note',exact:true}).click();

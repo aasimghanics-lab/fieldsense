@@ -8,7 +8,7 @@ import time
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field as ValueField, model_validator
 from pymongo.errors import PyMongoError
@@ -145,7 +145,7 @@ def series(filters: FilterQuery, hours: int = Query(24, ge=1, le=168), db=Depend
 
 
 @app.post('/api/readings', dependencies=[Depends(writer)], status_code=201)
-def bulk_readings(batch: list[Reading] = ValueField(min_length=1, max_length=5000), db=Depends(session)):
+def bulk_readings(batch: list[Reading] = Body(min_length=1, max_length=5000), db=Depends(session)):
     return ingest(db, batch)
 
 

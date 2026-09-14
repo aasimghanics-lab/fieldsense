@@ -26,6 +26,11 @@ test('researcher can explore actual data, maps, filters and exports', async ({ p
   await page.getByRole('button', { name: 'Time series', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Measurement history' })).toBeVisible();
   await page.screenshot({ path: '../artifacts/screenshots/time-series.png', fullPage: true });
+  const downloadEvent = page.waitForEvent('download');
+  await page.getByRole('button', {name:'Save PNG',exact:true}).click();
+  const download = await downloadEvent;
+  expect(download.suggestedFilename()).toBe('fieldsense-chart.png');
+  await download.saveAs('../artifacts/screenshots/exported-chart.png');
   const response = await page.request.get('http://localhost:8080/api/exports/csv?sensor=sensor-0-0-0');
   expect(response.ok()).toBeTruthy();
   expect(await response.text()).toContain('experiment_id,treatment_id');
@@ -37,4 +42,22 @@ test('responsive navigation and helpful validation', async ({ page }) => {
   await page.getByRole('button', { name: 'Experiments', exact: true }).click();
   await expect(page.getByRole('heading', { name:'Create an experiment' })).toBeVisible();
   await page.screenshot({ path: '../artifacts/screenshots/mobile.png', fullPage:true });
+});
+
+
+test('create an experiment and record a research annotation', async ({page}) => {
+  await page.goto('http://localhost:8080');
+  await page.getByRole('button',{name:'Experiments',exact:true}).click();
+  const form = page.locator('.form-panel form');
+  await form.getByLabel('Lab write token').fill('local-write-token-change-before-hosting');
+  await form.getByLabel('Title',{exact:true}).fill('Browser-verified water trial');
+  await form.getByLabel('Research question').fill('Can researchers create a trial and attach a note?');
+  await form.getByLabel('Start',{exact:true}).fill('2026-06-01');
+  await form.getByLabel('End',{exact:true}).fill('2026-09-30');
+  await form.getByLabel('Treatments, separated by commas').fill('Control, Irrigation');
+  await form.getByRole('button',{name:'Create experiment',exact:true}).click();
+  await expect(page.locator('.detail h2')).toHaveText('Browser-verified water trial');
+  await page.locator('.detail').getByLabel('Research note').fill('Plot layout reviewed in browser verification.');
+  await page.getByRole('button',{name:'Add note',exact:true}).click();
+  await expect(page.getByText('Plot layout reviewed in browser verification.')).toBeVisible();
 });

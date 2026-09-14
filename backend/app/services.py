@@ -48,13 +48,6 @@ class Filters(BaseModel):
     start: datetime | None = None
     end: datetime | None = None
 
-    @field_validator("start", "end")
-    @classmethod
-    def filter_timezone(cls, value):
-        if value is not None and value.tzinfo is None:
-            raise ValueError("Time filters must include a timezone")
-        return value
-
 
 FilterQuery = Annotated[Filters, Depends()]
 
@@ -97,6 +90,9 @@ def sensor_metadata(db, filters):
 
 
 def reading_query(db, filters):
+    for value in (filters.start, filters.end):
+        if value is not None and value.tzinfo is None:
+            raise HTTPException(422, "Time filters must include a timezone")
     if filters.start and filters.end and filters.start > filters.end:
         raise HTTPException(422, "Start must precede end")
     query = {"sensor_id": {"$in": list(sensor_metadata(db, filters))}}

@@ -223,3 +223,37 @@ def test_quality_range_and_filter_timezone(client, headers):
         assert client.get("/api/readings?start=2026-01-01T00:00:00").status_code == 422
     finally:
         documents.readings.delete_one({"_id": row["id"]})
+
+
+def test_storage_failure_is_actionable(client, monkeypatch):
+    from pymongo.collection import Collection
+    from pymongo.errors import AutoReconnect
+
+    def unavailable(*args, **kwargs):
+        raise AutoReconnect("private connection details")
+
+    monkeypatch.setattr(Collection, "aggregate", unavailable)
+    response = client.get("/api/dashboard")
+    assert response.status_code == 503
+    assert "temporarily unavailable" in response.json()["detail"]
+    assert "private" not in response.text
+
+
+def test_relational_foreign_keys():
+    from sqlalchemy.exc import IntegrityError
+
+    from app.models import Sensor
+
+    with Session() as db:
+        db.add(
+            Sensor(
+                id="test-invalid-fk",
+                name="Invalid sensor",
+                plot_id="not-a-plot",
+                type_id="soil_moisture",
+                location="SRID=4326;POINT(-83 40)",
+            )
+        )
+        with pytest.raises(IntegrityError):
+            db.commit()
+        db.rollback()

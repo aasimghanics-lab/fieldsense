@@ -2,7 +2,7 @@ import math
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import HTTPException, Query
+from fastapi import Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from pymongo import UpdateOne
 from sklearn.ensemble import IsolationForest
@@ -49,7 +49,7 @@ class Filters(BaseModel):
     end: datetime | None = None
 
 
-FilterQuery = Annotated[Filters, Query()]
+FilterQuery = Annotated[Filters, Depends()]
 
 
 def sensor_metadata(db, filters):

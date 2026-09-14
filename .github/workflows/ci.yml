@@ -39,6 +39,19 @@ jobs:
         with:
           name: research-validation
           path: artifacts/
+      - name: Browser verification and real screenshots
+        run: |
+          cd frontend
+          npm install
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-and-lockfile
+          path: |
+            artifacts/screenshots/
+            frontend/package-lock.json
       - name: Container logs
         if: always()
         run: docker compose logs --tail 100

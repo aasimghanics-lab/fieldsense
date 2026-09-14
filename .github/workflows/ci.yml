@@ -1,0 +1,47 @@
+name: FieldSense verification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        working-directory: frontend
+      - run: npm run lint && npm test && npm run build
+        working-directory: frontend
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start production stack and seed real databases
+        run: docker compose up --build -d --wait --wait-timeout 600
+      - name: Python lint and format
+        run: docker compose exec -T backend sh -c 'ruff check . && ruff format --check .'
+      - name: Database API geospatial and ML tests
+        run: docker compose exec -T backend pytest -q
+      - name: Export and run R
+        run: |
+          mkdir -p artifacts
+          curl --fail 'http://localhost:8080/api/exports/csv?measurement=soil_moisture' -o artifacts/readings.csv
+          docker compose --profile analysis run --rm analysis
+          test -s artifacts/r/plot-summary.csv
+          test -s artifacts/r/soil_moisture-treatments.png
+      - name: Benchmarks
+        run: docker compose exec -T backend python benchmarks.py > artifacts/benchmark.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-validation
+          path: artifacts/
+      - name: Container logs
+        if: always()
+        run: docker compose logs --tail 100
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v

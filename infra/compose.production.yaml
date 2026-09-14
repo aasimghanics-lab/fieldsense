@@ -1,0 +1,16 @@
+services:
+  frontend:
+    ports: !reset []
+  caddy:
+    image: caddy:2.10-alpine
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?Set a domain with DNS pointing to the instance}
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      frontend: {condition: service_healthy}
+    restart: unless-stopped
+volumes:
+  caddy-data:

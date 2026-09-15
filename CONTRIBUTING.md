@@ -9,10 +9,12 @@ docker compose exec backend pytest -q
 docker compose exec backend ruff check .
 docker compose exec backend ruff format --check .
 cd frontend
-npm install
+npm ci
 npm run lint
 npm test
 npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
 
 Integration tests require the seeded demo database and clean up their own inserted readings/experiments. Never point this suite at a real research database. Put schema changes in new Alembic revisions, preserve stable identifiers, validate timezone-aware timestamps and keep aggregation/export limits. Test changes against both databases; SQLite and document mocks cannot validate PostGIS or MongoDB aggregation semantics.

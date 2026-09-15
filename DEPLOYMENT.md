@@ -23,6 +23,7 @@ aws configure sso
 aws sso login --profile fieldsense
 export AWS_PROFILE=fieldsense
 terraform -chdir=infra init
+terraform -chdir=infra validate
 terraform -chdir=infra plan -var='domain=fieldsense.your-domain.edu'
 terraform -chdir=infra apply -var='domain=fieldsense.your-domain.edu'
 ```
@@ -43,3 +44,5 @@ Before storing real research data, configure institutional access control, backu
 For a managed architecture, move PostgreSQL/PostGIS to RDS, documents to MongoDB Atlas, and application containers to ECS; supply DATABASE_URL and MONGO_URL through a secret manager. That architecture is a documented extension, not provisioned by this repository.
 
 No AWS deployment is claimed without a verified public URL. Sites Worker hosting cannot host this Python/PostGIS/MongoDB application as provided.
+
+The checked-in `infra/.terraform.lock.hcl` pins the AWS provider selected during a local `terraform init -backend=false`. Terraform 1.10.5 `init` and `validate` succeeded in a disposable Docker container on 2026-09-15; no credentialed plan or apply was run.

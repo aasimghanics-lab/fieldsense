@@ -75,7 +75,7 @@ IsolationForest uses 100 trees, 2.5% contamination and a fixed random seed, fitt
 
 ## Verification and deployment
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for tests, lint and build commands; [BENCHMARKS.md](BENCHMARKS.md) for measured evidence and workload definitions; [DEPLOYMENT.md](DEPLOYMENT.md) for local operation and the AWS Terraform path. CI runs actual PostGIS/MongoDB API tests, model fitting, frontend tests/build, R export analysis and HTTP benchmarks.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for tests, lint and build commands; [VERIFICATION.md](VERIFICATION.md) for the clean-room run and exact pass counts; [BENCHMARKS.md](BENCHMARKS.md) for measured evidence and workload definitions; [DEPLOYMENT.md](DEPLOYMENT.md) for local operation and the AWS Terraform path. CI runs actual PostGIS/MongoDB API tests, model fitting, frontend tests/build, R export analysis and HTTP benchmarks. The browser suite saves actual overview, time-series and mobile screenshots under ignored `artifacts/screenshots/`; a [previous CI run's browser artifacts](https://github.com/aasimghanics-lab/fieldsense/actions/runs/34879690802) provide a viewable demo while the local app runs at http://localhost:8080.
 
 ## Scope and limitations
 

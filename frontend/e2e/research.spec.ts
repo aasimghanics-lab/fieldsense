@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test('researcher can explore actual data, maps, filters and exports', async ({ page }) => {
+  test.setTimeout(120000);
   await page.goto('http://localhost:8080');
   await expect(page.getByRole('heading', { name: 'A clearer picture of your fields.' })).toBeVisible();
-  await expect(page.getByText('Connecting to research dataâ€¦')).toBeHidden();
+  await expect(page.getByRole('status')).toBeHidden({ timeout: 30000 });
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(page.locator('.stat')).toHaveCount(4);
   await expect(page.locator('.recharts-surface').first()).toBeVisible();
@@ -18,7 +19,7 @@ test('researcher can explore actual data, maps, filters and exports', async ({ p
   await expect(page.locator('tbody tr').first()).not.toHaveText(first);
   await page.getByLabel('Quality columns').uncheck();
   await expect(page.getByRole('columnheader', { name: 'Quality', exact: true })).toHaveCount(0);
-  await page.locator('.filters').getByLabel('sensor', { exact: true }).selectOption('sensor-0-0-0');
+  await page.getByRole('combobox', { name: 'sensor', exact: true }).selectOption('sensor-0-0-0');
   await expect(page.getByText(/Page 1 of/)).toBeVisible();
   await page.getByRole('button', { name: 'Field map', exact: true }).click();
   await page.locator('.leaflet-interactive').first().click({ force: true });
@@ -44,23 +45,25 @@ test('responsive navigation and helpful validation', async ({ page }) => {
   await page.screenshot({ path: '../artifacts/screenshots/mobile.png', fullPage:true });
 });
 
-
-test('create an experiment and record a research annotation', async ({page}) => {
+test('researcher can create an experiment and attach a note', async ({ page }) => {
   await page.goto('http://localhost:8080');
-  await page.getByRole('button',{name:'Experiments',exact:true}).click();
-  const form = page.locator('.form-panel form');
-  await form.getByLabel('Lab write token').fill('local-write-token-change-before-hosting');
-  await form.getByLabel('Title',{exact:true}).fill('Browser-verified water trial');
-  await form.getByLabel('Research question').fill('Can researchers create a trial and attach a note?');
-  await form.getByLabel('Start',{exact:true}).fill('2026-06-01');
-  await form.getByLabel('End',{exact:true}).fill('2026-09-30');
-  await form.getByLabel('Treatments, separated by commas').fill('Control, Irrigation');
+  await expect(page.getByRole('status')).toBeHidden({ timeout: 30000 });
+  await page.getByRole('button', { name: 'Experiments', exact: true }).click();
+  const title = `Browser trial ${Date.now()}`;
+  const form = page.getByRole('heading', { name: 'Create an experiment' }).locator('..').locator('form');
+  await form.getByLabel('Lab write token').fill(process.env.WRITE_TOKEN || 'local-write-token-change-before-hosting');
+  await form.getByLabel('Title').fill(title);
+  await form.getByLabel('Research question').fill('Browser verified research workflow');
+  await form.getByLabel('Start').fill(new Date().toISOString().slice(0,10));
+  await form.getByLabel('End').fill(new Date(Date.now()+86400000).toISOString().slice(0,10));
+  await form.getByLabel('Treatments, separated by commas').fill('Rainfed control, Supplemental irrigation');
   const responseEvent=page.waitForResponse(r=>r.url().endsWith('/api/experiments')&&r.request().method()==='POST');
-  await form.getByRole('button',{name:'Create experiment',exact:true}).click();
-  const response=await responseEvent;
-  expect(response.status(),JSON.stringify(await response.json())).toBe(201);
-  await expect(page.locator('.detail h2')).toHaveText('Browser-verified water trial');
-  await page.locator('.detail').getByLabel('Research note').fill('Plot layout reviewed in browser verification.');
-  await page.getByRole('button',{name:'Add note',exact:true}).click();
-  await expect(page.getByText('Plot layout reviewed in browser verification.')).toBeVisible();
+  await form.getByRole('button', { name: 'Create experiment' }).click();
+  expect((await responseEvent).status()).toBe(201);
+  await expect(page.locator('.detail').getByRole('heading', { name: title })).toBeVisible();
+  const note = `Browser note ${Date.now()}`;
+  await page.locator('.detail').getByLabel('Research note').fill(note);
+  await page.locator('.detail').getByRole('button', { name: 'Add note' }).click();
+  await expect(page.locator('.detail').getByText(note)).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
 });

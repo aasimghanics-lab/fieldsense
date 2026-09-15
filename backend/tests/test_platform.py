@@ -101,6 +101,17 @@ def test_ingest_idempotent_missing_and_unknown(client, headers):
         documents.readings.delete_one({"_id": row["id"]})
 
 
+def test_duplicate_id_within_batch_is_idempotent(client, headers):
+    row = payload(25)
+    try:
+        result = client.post("/api/readings", json=[row, row], headers=headers)
+        assert result.status_code == 201
+        assert result.json() == {"inserted": 1, "duplicates": 1}
+        assert documents.readings.count_documents({"_id": row["id"]}) == 1
+    finally:
+        documents.readings.delete_one({"_id": row["id"]})
+
+
 def test_pagination_filter_aggregation(client):
     result = client.get("/api/readings?farm=farm-0&sensor=sensor-0-0-0&size=7").json()
     assert len(result["items"]) == 7

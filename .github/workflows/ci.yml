@@ -3,6 +3,12 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker run --rm -v "$PWD:/workspace" -w /workspace/infra hashicorp/terraform:1.10.5 init -backend=false
+      - run: docker run --rm -v "$PWD:/workspace" -w /workspace/infra hashicorp/terraform:1.10.5 validate
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -61,9 +67,3 @@ jobs:
       - name: Cleanup
         if: always()
         run: docker compose down -v
-  infrastructure:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-      - run: terraform -chdir=infra init -backend=false && terraform -chdir=infra validate

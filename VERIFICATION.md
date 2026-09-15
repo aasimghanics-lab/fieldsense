@@ -43,4 +43,18 @@ The initial fresh startup exposed a PostgreSQL health-check race: the PostGIS im
 
 Container logs showed successful migrations, seeding, health checks, HTTP requests, and benchmark ingestion. No backend traceback or container health failure occurred in the final project. PostgreSQL and MongoDB initialization emitted routine informational messages. The browser suite created a demo experiment and note in the final project's database. Benchmark documents were removed afterward.
 
+## Verified rebased release
+
+The original push was rejected as non-fast-forward because the remote branch contained four additional commits. Those commits were integrated without overwriting history. The resulting source was rebuilt from empty volumes with `docker compose -p fieldsense_release up --build -d --wait --wait-timeout 600` and retested. All four services became healthy; the PostgreSQL readiness race did not recur.
+
+- Ruff lint/format passed and **28 Python tests passed** against the freshly seeded PostgreSQL/PostGIS and MongoDB services. One Starlette/AnyIO test-client deprecation warning remains.
+- `npm ci`, TypeScript lint, **3 Vitest tests**, and production Vite build passed; npm audit reported zero vulnerabilities and the build emitted no large-chunk warning.
+- **3 Chromium tests passed** against the release stack. They exercised live map/chart/filter/pagination/CSV and chart PNG download, mobile navigation, and UI creation of an experiment plus note.
+- A 5,744,860-byte API CSV export was read by R; it generated **24 plot summaries** and a treatment PNG.
+- The complete benchmark command ran again. The results for this rebased release are in [BENCHMARKS.md](BENCHMARKS.md).
+
+This rebased release is the current verification record; the earlier project sections record prior independent runs.
+
+Final `/api/health` reported all three storage components ok, and `docker compose -p fieldsense_release ps` showed all four services healthy. Backend logs contained no traceback or connection-refused error. PostgreSQL logged one expected foreign-key violation from the negative integration test; no other database `ERROR` or `FATAL` line appeared. Browser and R PNG artifacts were nonempty. The browser test added one demo experiment, so the running release project has 7 experiments after tests; a fresh seed has 6.
+
 No live AWS deployment, institutional login, scientific anomaly validation, high availability, or concurrent-user capacity is claimed.

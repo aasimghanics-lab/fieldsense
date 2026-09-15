@@ -48,3 +48,16 @@ After stopping the audit project, `docker compose -p fieldsense_final up --build
 | Spatial bounding-box lookup | 20 | 33.24 | 39.46 |
 
 The one 1,000-row ingestion batch took 140.35 ms (7,125.04 rows/second for that batch). Its benchmark documents were removed. Differences between the two local runs show why neither is a capacity or latency guarantee.
+
+## Rebasing release verification (2026-09-15)
+
+After integrating the four existing remote commits, `docker compose -p fieldsense_release up --build -d --wait --wait-timeout 600` created another empty database project. Following all release tests and R analysis, `docker compose -p fieldsense_release exec -T backend python benchmarks.py` measured the rebased source on the same WSL2 host (Python 3.12.14, 8 visible vCPUs, 3,868,900 kB container memory, 264,638 readings). The workload, one warmup, 20 sequential HTTP samples per read route, nearest-rank p95, and single cleaned-up 1,000-row ingestion batch were unchanged.
+
+| HTTP workload | Samples | Median (ms) | p95 (ms) |
+|---|---:|---:|---:|
+| Recent sensor readings | 20 | 13.31 | 14.91 |
+| Time aggregation | 20 | 142.62 | 179.38 |
+| Dashboard | 20 | 244.12 | 319.85 |
+| Spatial bounding-box lookup | 20 | 35.94 | 50.92 |
+
+The ingestion batch took 104.95 ms (9,528.76 rows/second for that batch). These are the measurements for the final rebased implementation; prior sections document earlier independent runs. The local host still does not reproduce the historical Linux CI latencies, and no sustained or concurrent capacity claim is made.
